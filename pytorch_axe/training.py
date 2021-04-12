@@ -1,6 +1,6 @@
 import torch
 from torch.nn.utils import clip_grad_norm_
-from pytoch_axe.monitor import Monitor
+from pytorch_axe.monitor import Monitor
 
 DEFAULT_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
