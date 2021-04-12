@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pytorch-axe"
+version = "0.1.0"
+description = "Minimalist interfaces to train pytorch models with less boilerplate code"
+authors = ["nallivam <nallivam@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.15"
+torch = "^1.6.0"
+tqdm = "^4.40.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
