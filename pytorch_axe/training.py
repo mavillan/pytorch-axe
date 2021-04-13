@@ -81,7 +81,7 @@ def iterative_train(
             
     return model,monitor
 
-def iterative_predict(model, dataloader):
+def iterative_predict(model, dataloader, device=DEFAULT_DEVICE):
     model.eval()
     all_preds = list()
     for batch in dataloader:
