@@ -15,7 +15,7 @@ def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
 
     for batch in train_dataloader:
         batch = move_batch_to_device(batch, device)
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(True):
             loss = model.training_step(batch)
             loss.backward()
@@ -35,7 +35,7 @@ def valid_epoch(model, valid_dataloader, optimizer, monitor,
     
     for batch in valid_dataloader:
         batch = move_batch_to_device(batch, device)
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(False):
             loss = model.validation_step(batch)      
         monitor.step(loss, batch_size=valid_dataloader.batch_size)
@@ -86,7 +86,7 @@ def iterative_predict(model, dataloader, device=DEFAULT_DEVICE):
     all_preds = list()
     for batch in dataloader:
         batch = move_batch_to_device(batch, device)
-        with torch.set_grad_enabled(True):
+        with torch.set_grad_enabled(False):
             pred = model.prediction_step(batch)
             all_preds.append(pred)
     return torch.cat(all_preds)
