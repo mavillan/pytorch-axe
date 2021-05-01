@@ -16,12 +16,13 @@ def move_batch_to_device(batch, device):
     return batch_in_device
 
 def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
-                clip_value=None, device=DEFAULT_DEVICE):
+                clip_value=None, device=DEFAULT_DEVICE, data_on_device=False):
     model.train()
     monitor.reset_epoch()
 
     for batch in train_dataloader:
-        batch = move_batch_to_device(batch, device)
+        if not data_on_device:
+            batch = move_batch_to_device(batch, device)
         optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(True):
             loss = model.training_step(batch)
@@ -36,12 +37,13 @@ def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
     monitor.log_epoch("train")
     
 def valid_epoch(model, valid_dataloader, optimizer, monitor, 
-                device=DEFAULT_DEVICE):
+                device=DEFAULT_DEVICE, data_on_device=False):
     model.eval()
     monitor.reset_epoch()
     
     for batch in valid_dataloader:
-        batch = move_batch_to_device(batch, device)
+        if not data_on_device:
+            batch = move_batch_to_device(batch, device)
         optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(False):
             loss = model.validation_step(batch)      
@@ -53,7 +55,7 @@ def valid_epoch(model, valid_dataloader, optimizer, monitor,
 def iterative_train(
     model, train_dataloader, valid_dataloader, min_epochs=10, max_epochs=50, 
     patience=10, clip_value=None, metric_fn=None, early_stop_on_metric=False, 
-    lower_is_better=True, device=DEFAULT_DEVICE, verbose=True):
+    lower_is_better=True, device=DEFAULT_DEVICE, data_on_device=False, verbose=True):
     
     # send model to device
     model = model.to(device)
@@ -77,8 +79,9 @@ def iterative_train(
         )
 
     for epoch in monitor.iter_epochs:
-        train_epoch(model, train_dataloader, optimizer, monitor, scheduler_batch_level, clip_value, device)    
-        early_stop = valid_epoch(model, valid_dataloader, optimizer, monitor, device)
+        train_epoch(model, train_dataloader, optimizer, monitor,
+                    scheduler_batch_level, clip_value, device, data_on_device)
+        early_stop = valid_epoch(model, valid_dataloader, optimizer, monitor, device, data_on_device)
         if early_stop and (epoch-1 >= min_epochs): break
             
         if scheduler_epoch_level is not None and reduce_on_plateau:
@@ -88,11 +91,12 @@ def iterative_train(
             
     return model,monitor
 
-def iterative_predict(model, dataloader, device=DEFAULT_DEVICE):
+def iterative_predict(model, dataloader, device=DEFAULT_DEVICE, data_on_device=False):
     model.eval()
     all_preds = list()
     for batch in dataloader:
-        batch = move_batch_to_device(batch, device)
+        if not data_on_device:
+            batch = move_batch_to_device(batch, device)
         with torch.set_grad_enabled(False):
             pred = model.prediction_step(batch)
             all_preds.append(pred)
