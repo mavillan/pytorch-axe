@@ -5,7 +5,14 @@ from pytorch_axe.monitor import Monitor
 DEFAULT_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def move_batch_to_device(batch, device):
-    batch_in_device = [tensor.to(device) for tensor in batch]
+    batch_in_device = list()
+    for item in batch:
+        if isinstance(item, torch.tensor):
+            batch_in_device.append(item.to(device))
+        elif isinstance(item, list):
+            aux_list = [tensor.to(device) for tensor in item]
+            batch_in_device.append(aux_list)
+
     return batch_in_device
 
 def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
