@@ -7,7 +7,7 @@ DEFAULT_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def move_batch_to_device(batch, device):
     batch_in_device = list()
     for item in batch:
-        if isinstance(item, torch.tensor):
+        if isinstance(item, torch.Tensor):
             batch_in_device.append(item.to(device))
         elif isinstance(item, list):
             aux_list = [tensor.to(device) for tensor in item]
