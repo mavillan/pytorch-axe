@@ -5,7 +5,7 @@ from tqdm.notebook import trange
 class Monitor:
     def __init__(self, model, optimizer, scheduler, patience, metric_fn, 
                  num_epochs, dataset_sizes, early_stop_on_metric=False,
-                 lower_is_better=True, keep_best_models=True, verbose=True):
+                 lower_is_better=True, keep_best_models=False, verbose=True):
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -40,6 +40,7 @@ class Monitor:
         self.best_model_state = model.state_dict()
         self.best_optimizer_state = optimizer.state_dict()
         self.best_models = list()
+        self.keep_best_models = keep_best_models
 
         self.epoch_counter = {"train": 0, "valid": 0}
         self.es_counter = 0
@@ -106,11 +107,13 @@ class Monitor:
                 self.best_metric = copy.deepcopy(self.epoch_metric["valid"])
                 self.best_model_state = copy.deepcopy(self.model.state_dict())
                 self.best_optimizer_state = copy.deepcopy(self.optimizer.state_dict())
-                self.best_models = [copy.deepcopy(self.model, )]
+                if self.keep_best_models:
+                    self.best_models = [copy.deepcopy(self.model, )]
                 self.es_counter = 0
             else:
                 self.es_counter += 1
-                self.best_models.append(copy.deepcopy(self.model))
+                if self.keep_best_models:
+                    self.best_models.append(copy.deepcopy(self.model))
                 if self.es_counter >= self.patience:
                     early_stop = True
                     if self.verbose: 
