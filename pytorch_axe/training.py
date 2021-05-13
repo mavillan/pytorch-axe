@@ -53,7 +53,7 @@ def valid_epoch(model, valid_dataloader, optimizer, monitor,
     return early_stop
 
 def iterative_train(
-    model, train_dataloader, valid_dataloader, min_epochs=10, max_epochs=50, 
+    model, train_dataloader, valid_dataloader=None, min_epochs=10, max_epochs=50, 
     patience=10, clip_value=None, metric_fn=None, early_stop_on_metric=False, 
     lower_is_better=True, device=DEFAULT_DEVICE, data_on_device=False, verbose=True):
     
@@ -70,7 +70,7 @@ def iterative_train(
     # setup of monitor
     dataset_sizes = {
         "train":len(train_dataloader.dataset), 
-        "valid":len(valid_dataloader.dataset)
+        "valid":len(valid_dataloader.dataset) if valid_dataloader is not None else 0
         }
     monitor = Monitor(
         model, optimizer, scheduler, patience, metric_fn,
@@ -79,10 +79,16 @@ def iterative_train(
         )
 
     for epoch in monitor.iter_epochs:
-        train_epoch(model, train_dataloader, optimizer, monitor,
-                    scheduler_batch_level, clip_value, device, data_on_device)
-        early_stop = valid_epoch(model, valid_dataloader, optimizer, monitor, device, data_on_device)
-        if early_stop and (epoch-1 >= min_epochs): break
+        train_epoch(
+            model, train_dataloader, optimizer, monitor,
+            scheduler_batch_level, clip_value, device, data_on_device
+            )
+        if valid_dataloader is not None:
+            early_stop = valid_epoch(
+                model, valid_dataloader, optimizer,
+                monitor, device, data_on_device
+                )
+            if early_stop and (epoch-1 >= min_epochs): break
             
         if scheduler_epoch_level is not None and reduce_on_plateau:
             scheduler_epoch_level.step(monitor.epoch_loss["valid"])
