@@ -62,6 +62,8 @@ def iterative_train(
     
     # setup of optimizer and scheduler
     optimizer,scheduler = model.configure_optimizers()
+    scheduler_batch_level = None
+    scheduler_epoch_level = scheduler
     reduce_on_plateau = isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau)
     if reduce_on_plateau:
         scheduler_batch_level = None
