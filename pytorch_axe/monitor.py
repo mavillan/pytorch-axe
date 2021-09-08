@@ -97,27 +97,28 @@ class Monitor:
         self.epoch_counter[phase] += 1
         early_stop = False
 
-        if (phase == "valid") & (self.epoch_counter[phase] >= self.min_epochs):
+        if phase == "valid":
+            if self.epoch_counter[phase] >= self.min_epochs:
             
-            if not self.early_stop_on_metric:
-                improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
-            elif self.early_stop_on_metric:
-                improved = self.check_if_improved(self.best_metric, self.epoch_metric["valid"])
-                
-            if improved:
-                self.best_loss = copy.deepcopy(self.epoch_loss["valid"])
-                self.best_metric = copy.deepcopy(self.epoch_metric["valid"])
-                self.best_model_state = copy.deepcopy(self.model.state_dict())
-                if self.keep_best_models:
-                    self.best_models = [copy.deepcopy(self.model, )]
-                self.es_counter = 0
-            else:
-                self.es_counter += 1
-                if self.keep_best_models:
-                    self.best_models.append(copy.deepcopy(self.model))
-                if self.es_counter >= self.patience:
-                    early_stop = True
-                    if self.verbose: 
-                        self.iter_epochs.close()
+                if not self.early_stop_on_metric:
+                    improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
+                elif self.early_stop_on_metric:
+                    improved = self.check_if_improved(self.best_metric, self.epoch_metric["valid"])
+
+                if improved:
+                    self.best_loss = copy.deepcopy(self.epoch_loss["valid"])
+                    self.best_metric = copy.deepcopy(self.epoch_metric["valid"])
+                    self.best_model_state = copy.deepcopy(self.model.state_dict())
+                    if self.keep_best_models:
+                        self.best_models = [copy.deepcopy(self.model, )]
+                    self.es_counter = 0
+                else:
+                    self.es_counter += 1
+                    if self.keep_best_models:
+                        self.best_models.append(copy.deepcopy(self.model))
+                    if self.es_counter >= self.patience:
+                        early_stop = True
+                        if self.verbose:
+                            self.iter_epochs.close()
                 
         return early_stop
