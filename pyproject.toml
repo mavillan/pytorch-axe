@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytorch-axe"
-version = "0.1.13"
+version = "0.1.14"
 description = "Minimalist interfaces to train pytorch models with less boilerplate code"
 authors = ["nallivam <nallivam@gmail.com>"]
 

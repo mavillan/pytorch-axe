@@ -97,7 +97,7 @@ class Monitor:
         self.epoch_counter[phase] += 1
         early_stop = False
 
-        if (phase == "valid") & (self.epoch_counter["phase"] >= self.min_epochs):
+        if (phase == "valid") & (self.epoch_counter[phase] >= self.min_epochs):
             
             if not self.early_stop_on_metric:
                 improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
