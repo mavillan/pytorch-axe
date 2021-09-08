@@ -4,22 +4,24 @@ from tqdm import trange
 
 class Monitor:
     def __init__(self, model, optimizer, scheduler, patience, metric_fn, 
-                 num_epochs, dataset_sizes, early_stop_on_metric=False,
+                 min_epochs, max_epochs, dataset_sizes, early_stop_on_metric=False,
                  lower_is_better=True, keep_best_models=False, verbose=True):
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.patience = patience
         self.metric_fn = metric_fn
+        self.min_epochs = min_epochs
+        self.max_epochs = max_epochs
         self.dataset_sizes = dataset_sizes
         self.early_stop_on_metric = early_stop_on_metric
         self.lower_is_better = lower_is_better
         self.verbose = verbose
         
         if verbose:
-            self.iter_epochs = trange(num_epochs)
+            self.iter_epochs = trange(max_epochs)
         else:
-            self.iter_epochs = range(num_epochs)
+            self.iter_epochs = range(max_epochs)
             
         if lower_is_better:
             self.epoch_loss = {"train": np.inf, "valid": np.inf}
@@ -38,7 +40,6 @@ class Monitor:
         self.valid_metric = list()
             
         self.best_model_state = model.state_dict()
-        self.best_optimizer_state = optimizer.state_dict()
         self.best_models = list()
         self.keep_best_models = keep_best_models
 
@@ -92,10 +93,11 @@ class Monitor:
             
         if self.verbose: 
             self.iter_epochs.set_postfix(**postfix_kwargs)
-        self.epoch_counter[phase] += 1
 
+        self.epoch_counter[phase] += 1
         early_stop = False
-        if phase == "valid":
+
+        if (phase == "valid") & (self.epoch_counter["phase"] >= self.min_epochs):
             
             if not self.early_stop_on_metric:
                 improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
@@ -106,7 +108,6 @@ class Monitor:
                 self.best_loss = copy.deepcopy(self.epoch_loss["valid"])
                 self.best_metric = copy.deepcopy(self.epoch_metric["valid"])
                 self.best_model_state = copy.deepcopy(self.model.state_dict())
-                self.best_optimizer_state = copy.deepcopy(self.optimizer.state_dict())
                 if self.keep_best_models:
                     self.best_models = [copy.deepcopy(self.model, )]
                 self.es_counter = 0
