@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-from tqdm import trange
+from tqdm.notebook import trange
 
 class Monitor:
     def __init__(self, model, optimizer, scheduler, patience, metric_fn, 
