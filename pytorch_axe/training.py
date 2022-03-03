@@ -4,7 +4,14 @@ from pytorch_axe.monitor import Monitor
 
 DEFAULT_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def move_batch_to_device(batch, device):
+def move_batch_to_device(
+        batch,
+        device
+    ):
+    """
+    Utility function to move a batch of data to a device (GPU/CPU).
+    """
+
     if isinstance(batch, dict):
         batch_in_device = dict()
         for key,tensor in batch.items():
@@ -20,8 +27,20 @@ def move_batch_to_device(batch, device):
 
     return batch_in_device
 
-def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
-                clip_value=None, device=DEFAULT_DEVICE, data_on_device=False):
+def train_epoch(
+        model,
+        train_dataloader,
+        optimizer,
+        monitor,
+        scheduler=None,
+        clip_value=None,
+        device=DEFAULT_DEVICE,
+        data_on_device=False
+    ):
+    """
+    Trains the model iteratively for one epoch.
+    """
+
     model.train()
     monitor.reset_epoch()
 
@@ -41,8 +60,18 @@ def train_epoch(model, train_dataloader, optimizer, monitor, scheduler=None,
     
     monitor.log_epoch("train")
     
-def valid_epoch(model, valid_dataloader, optimizer, monitor, 
-                device=DEFAULT_DEVICE, data_on_device=False):
+def valid_epoch(
+        model,
+        valid_dataloader,
+        optimizer,
+        monitor,
+        device=DEFAULT_DEVICE,
+        data_on_device=False
+    ):
+    """
+    Validates the model iteratively for one epoch.
+    """
+
     model.eval()
     monitor.reset_epoch()
     
@@ -57,10 +86,24 @@ def valid_epoch(model, valid_dataloader, optimizer, monitor,
     early_stop = monitor.log_epoch("valid")
     return early_stop
 
-def iterative_train(
-    model, train_dataloader, valid_dataloader=None, min_epochs=10, max_epochs=50, 
-    patience=10, clip_value=None, metric_fn=None, early_stop_on_metric=False, 
-    lower_is_better=True, device=DEFAULT_DEVICE, data_on_device=False, verbose=True):
+def train(
+        model,
+        train_dataloader,
+        valid_dataloader=None,
+        min_epochs=10,
+        max_epochs=50,
+        patience=10,
+        clip_value=None,
+        metric_fn=None,
+        early_stop_on_metric=False,
+        lower_is_better=True,
+        device=DEFAULT_DEVICE,
+        data_on_device=False,
+        verbose=True,
+    ):
+    """
+    Trains the model iteratively for a given number of epochs.
+    """
     
     # send model to device
     model = model.to(device)
@@ -85,7 +128,7 @@ def iterative_train(
         early_stop_on_metric, lower_is_better, verbose
         )
 
-    for epoch in monitor.iter_epochs:
+    for _ in monitor.iter_epochs:
         train_epoch(
             model, train_dataloader, optimizer, monitor,
             scheduler_batch_level, clip_value, device, data_on_device
@@ -104,7 +147,16 @@ def iterative_train(
             
     return model,monitor
 
-def iterative_predict(model, dataloader, device=DEFAULT_DEVICE, data_on_device=False):
+def predict(
+        model,
+        dataloader,
+        device=DEFAULT_DEVICE,
+        data_on_device=False
+    ):
+    """
+    Iteratively generate predictions with model for a given dataset.
+    """
+
     model.eval()
     all_preds = list()
     for batch in dataloader:
