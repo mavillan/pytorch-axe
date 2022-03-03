@@ -80,8 +80,21 @@ def valid_epoch(
             batch = move_batch_to_device(batch, device)
         optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(False):
-            loss = model.validation_step(batch)      
-        monitor.step(loss, batch_size=valid_dataloader.batch_size)
+            if monitor.metric_fn is not None:
+                _,y = model.unpack_batch(batch)
+                loss,y_hat = model.validation_step(batch, return_predictions=True)
+                monitor.step(
+                    loss,
+                    batch_size=valid_dataloader.batch_size,
+                    predictions=y_hat,
+                    targets=y
+                )
+            else:
+                loss = model.validation_step(batch)
+                monitor.step(
+                    loss,
+                    batch_size=valid_dataloader.batch_size
+                )
     
     early_stop = monitor.log_epoch("valid")
     return early_stop
@@ -121,23 +134,23 @@ def train(
     dataset_sizes = {
         "train":len(train_dataloader.dataset), 
         "valid":len(valid_dataloader.dataset) if valid_dataloader is not None else 0
-        }
+     }
     monitor = Monitor(
         model, optimizer, scheduler, patience, metric_fn,
         min_epochs, max_epochs, dataset_sizes,
         early_stop_on_metric, lower_is_better, verbose
-        )
+    )
 
     for _ in monitor.iter_epochs:
         train_epoch(
             model, train_dataloader, optimizer, monitor,
             scheduler_batch_level, clip_value, device, data_on_device
-            )
+        )
         if valid_dataloader is not None:
             early_stop = valid_epoch(
                 model, valid_dataloader, optimizer,
                 monitor, device, data_on_device
-                )
+            )
             if early_stop: break
             
         if scheduler_epoch_level is not None and reduce_on_plateau:
@@ -163,6 +176,6 @@ def predict(
         if not data_on_device:
             batch = move_batch_to_device(batch, device)
         with torch.set_grad_enabled(False):
-            pred = model.prediction_step(batch)
+            pred = model.prediction_step(*batch)
             all_preds.append(pred)
     return torch.cat(all_preds)
