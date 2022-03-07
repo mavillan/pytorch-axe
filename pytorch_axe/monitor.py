@@ -54,7 +54,6 @@ class Monitor:
             
         self.train_loss = list()
         self.valid_loss = list()
-        self.train_metric = list()
         self.valid_metric = list()
             
         self.best_model_state = model.state_dict()
@@ -68,7 +67,7 @@ class Monitor:
     def check_if_improved(self, best, actual):
         if self.lower_is_better and (actual < best):
             return True
-        elif not self.lower_is_better and (best > actual):
+        elif not self.lower_is_better and (actual > best):
             return True
         else:
             return False
@@ -132,10 +131,10 @@ class Monitor:
         if phase == "valid":
             if self.epoch_counter[phase] >= self.min_epochs:
             
-                if not self.early_stop_on_metric:
-                    improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
-                elif self.early_stop_on_metric:
+                if self.early_stop_on_metric:
                     improved = self.check_if_improved(self.best_metric, self.epoch_metric)
+                else:
+                    improved = self.check_if_improved(self.best_loss, self.epoch_loss["valid"])
 
                 if improved:
                     self.best_loss = copy.deepcopy(self.epoch_loss["valid"])
